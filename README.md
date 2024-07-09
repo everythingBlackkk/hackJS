@@ -20,9 +20,9 @@ ____
     ```bash
     cd hackJS
     ```
-3. Build the Go executable:
+3. run tool:
    ```bash
-    go build
+       go run main.go
    ```
    
 ## Usage
@@ -30,12 +30,7 @@ ____
 To use hackJS, specify a target URL that contains JavaScript files you want to analyze. The tool will fetch these JavaScript files, extract embedded links and subdomains
 
     ```bash
-    ./hackJS -u https://example.com
-    ```
-## Output
-After running hackJS, it will print and save the extracted results into the result directory. The results will be categorized into Links, Subdomains.
-    ```bash
-    ./hackJS -u https://example.com
+    go run main.go -u https://example.com
     ```
     
 ## Contributing
