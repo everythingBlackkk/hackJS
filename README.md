@@ -22,7 +22,7 @@ ____
     ```
 3. run tool:
    ```bash
-       go run main.go
+    go run main.go
    ```
    
 ## Usage
