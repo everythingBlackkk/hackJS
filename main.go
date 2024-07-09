@@ -103,8 +103,7 @@ func extractJSFiles(html, baseURL string) []string {
 		if !strings.HasPrefix(jsFile, "http") {
 			jsFile = baseURL + "/" + jsFile
 		}
-		// Remove any trailing HTML tags or attributes
-		jsFile = strings.Split(jsFile, `"`)[0]
+		jsFile = cleanURL(jsFile)
 		jsFiles = append(jsFiles, jsFile)
 	}
 	return jsFiles
@@ -129,12 +128,12 @@ func extractLinks(jsContent string, baseURL string) []string {
 	lines := strings.Split(jsContent, "\n")
 	baseDomain := extractDomain(baseURL)
 	var matches []string
-	re := regexp.MustCompile(`https?://[^\s"<]+`)
+	re := regexp.MustCompile(`https?://[^\s"<>()']+`)
 	for _, line := range lines {
 		lineMatches := re.FindAllString(line, -1)
 		for _, match := range lineMatches {
 			if strings.Contains(match, baseDomain) {
-				matches = append(matches, match)
+				matches = append(matches, cleanURL(match))
 			}
 		}
 	}
@@ -231,6 +230,16 @@ func extractDomain(targetUrl string) string {
 		return ""
 	}
 	return parsedUrl.Host
+}
+
+func cleanURL(rawURL string) string {
+	trimChars := []string{`"`, `'`, `>`, `<`, `)`}
+	for _, char := range trimChars {
+		if idx := strings.Index(rawURL, char); idx != -1 {
+			rawURL = rawURL[:idx]
+		}
+	}
+	return rawURL
 }
 
 func removeDuplicates(elements []string) []string {
