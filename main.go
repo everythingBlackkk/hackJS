@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -12,18 +13,25 @@ import (
 	"strings"
 )
 
-const toolName = "hackJS"
-
 func main() {
 	printBanner()
 
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: hackJS -u <URL>")
+		fmt.Println("Usage: hackJS -u <URL> or hackJS -l <file>")
 		return
 	}
 
-	targetUrl := os.Args[2]
-	fmt.Printf("Starting %s...\n", toolName)
+	if os.Args[1] == "-u" {
+		processURL(os.Args[2])
+	} else if os.Args[1] == "-l" {
+		processFile(os.Args[2])
+	} else {
+		fmt.Println("Invalid option. Use -u for a URL or -l for a file.")
+	}
+}
+
+func processURL(targetUrl string) {
+	fmt.Printf("\nStarting %s...\n", "hackJS")
 
 	resp, err := httpGet(targetUrl)
 	if err != nil {
@@ -60,14 +68,35 @@ func main() {
 
 	results = removeDuplicates(results)
 	subdomains = removeDuplicates(subdomains)
+	jsFiles = removeDuplicates(jsFiles)
 
-	printResults("Links", results)
-	printResults("Subdomains", subdomains)
+	printResults("Links", results, "\033[32m")
+	printResults("Subdomains", subdomains, "\033[36m")
+	printResults("JS Files", jsFiles, "\033[33m")
 
-	saveResults(targetUrl, results, subdomains)
+	saveResults(targetUrl, results, subdomains, jsFiles)
+}
+
+func processFile(fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		processURL(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("Error reading file: %v\n", err)
+	}
 }
 
 func printBanner() {
+	fmt.Println("\033[32m")
 	fmt.Println(`
  __                            __           _____   ______  
 /  |                          /  |         /     | /      \ 
@@ -82,7 +111,9 @@ $$/   $$/  $$$$$$$/  $$$$$$$/ $$/   $$/  $$$$$$/   $$$$$$/
                                                             
                                                             
 `)
-	fmt.Println("Created by: everythingBlackkk\n")
+	fmt.Println("Created by: everythingBlackkk")
+	fmt.Println("Made By <3 : Yassin Abdul Razzaq")
+	fmt.Println("\033[0m")
 }
 
 func httpGet(targetUrl string) (*http.Response, error) {
@@ -132,7 +163,7 @@ func extractLinks(jsContent string, baseURL string) []string {
 	for _, line := range lines {
 		lineMatches := re.FindAllString(line, -1)
 		for _, match := range lineMatches {
-			if strings.Contains(match, baseDomain) {
+			if strings.Contains(match, baseDomain) && !strings.HasSuffix(match, ".js") {
 				matches = append(matches, cleanURL(match))
 			}
 		}
@@ -182,7 +213,7 @@ func filterSubdomains(subdomains []string, baseURL string) []string {
 	return filteredSubdomains
 }
 
-func saveResults(targetUrl string, results, subdomains []string) {
+func saveResults(targetUrl string, results, subdomains, jsFiles []string) {
 	domain := extractDomain(targetUrl)
 	if domain == "" {
 		fmt.Println("Invalid URL provided.")
@@ -203,25 +234,28 @@ func saveResults(targetUrl string, results, subdomains []string) {
 	}
 	defer file.Close()
 
-	writeSection(file, "Links", results)
-	writeSection(file, "Subdomains", subdomains)
+	writeSection(file, "Links", results, "\033[32m")
+	writeSection(file, "Subdomains", subdomains, "\033[36m")
+	writeSection(file, "JS Files", jsFiles, "\033[33m")
 
 	fmt.Printf("Results saved to %s\n", fileName)
+	fmt.Printf("_____________________________________________________________________________________________")
 }
 
-func writeSection(file *os.File, title string, results []string) {
-	file.WriteString(fmt.Sprintf("\n%s:\n", title))
+func writeSection(file *os.File, title string, results []string, color string) {
+	file.WriteString(fmt.Sprintf("\n%s%s:\n", color, title))
 	for _, result := range results {
-		file.WriteString(result + "\n")
+		file.WriteString(fmt.Sprintf("%s%s\n", color, result))
 	}
+	file.WriteString("\033[0m")
 }
 
-func printResults(title string, results []string) {
-	fmt.Printf("\n%s:\n", title)
+func printResults(title string, results []string, color string) {
+	fmt.Printf("\n%s%s:\n", color, title)
 	for _, result := range results {
-		fmt.Println(result)
+		fmt.Printf("%s%s\n", color, result)
 	}
-	fmt.Printf("Total %s found: %d\n", title, len(results))
+	fmt.Printf("\033[0mTotal %s found: %d\n", title, len(results))
 }
 
 func extractDomain(targetUrl string) string {
@@ -245,14 +279,12 @@ func cleanURL(rawURL string) string {
 func removeDuplicates(elements []string) []string {
 	encountered := map[string]bool{}
 	result := []string{}
-
 	for _, v := range elements {
 		if !encountered[v] {
 			encountered[v] = true
 			result = append(result, v)
 		}
 	}
-
 	sort.Strings(result)
 	return result
 }
