@@ -148,8 +148,8 @@ $$/   $$/  $$$$$$$/  $$$$$$$/ $$/   $$/  $$$$$$/   $$$$$$/
                                                             
                                                             
 `)
-	fmt.Println("Created by: everythingBlackkk")
-	fmt.Println("Made By <3 : Yassin Abdul Razzaq")
+	fmt.Println("# hackJS , Coded By Yassin Abd-elrazik")
+	fmt.Println("Made By <3 github : everythingBlackkk")
 	fmt.Println("\033[0m")
 }
 
