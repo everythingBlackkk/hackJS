@@ -32,7 +32,7 @@ To use hackJS, specify a target URL that contains JavaScript files you want to a
 sensitive data in all js file using " -w " flag.
 
    ```bash
-    go run main.go -u https://example.com
+    go run main.go -u https://everythingBlackkk.com
    ```
    ```bash
     go run main.go -l urls.txt
