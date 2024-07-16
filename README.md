@@ -30,11 +30,17 @@ ____
 
 To use hackJS, specify a target URL that contains JavaScript files you want to analyze. The tool will fetch these JavaScript files, extract embedded links and subdomains and 
 sensitive data in all js file using " -w " flag.
-    ```
+
+   ```bash
     go run main.go -u https://example.com
-    go run main.go -l url.txt 
+   ```
+   ```bash
+    go run main.go -l urls.txt
+   ```
+   ```bash
     go run main.go -l url.txt -w sensitive-world-list.txt
-    ```
+   ```
+    
     
     
 ## Contributing
