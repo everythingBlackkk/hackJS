@@ -13,24 +13,54 @@ import (
 	"strings"
 )
 
+var sensitiveWords []string
+
 func main() {
 	printBanner()
 
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: hackJS -u <URL> or hackJS -l <file>")
+		fmt.Println("Usage: hackJS -u <URL> or hackJS -l <file> [-w <wordlist>]")
 		return
 	}
 
+	wordlistProvided := false
+	if len(os.Args) == 5 && os.Args[3] == "-w" {
+		loadWordlist(os.Args[4])
+		wordlistProvided = true
+	}
+
 	if os.Args[1] == "-u" {
-		processURL(os.Args[2])
+		processURL(os.Args[2], wordlistProvided)
 	} else if os.Args[1] == "-l" {
-		processFile(os.Args[2])
+		processFile(os.Args[2], wordlistProvided)
 	} else {
 		fmt.Println("Invalid option. Use -u for a URL or -l for a file.")
 	}
+
+	if !wordlistProvided {
+		fmt.Println("Note: You did not provide a wordlist with -w to benefit from the sensitive data search feature.")
+	}
 }
 
-func processURL(targetUrl string) {
+func loadWordlist(fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Printf("Error opening wordlist file: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		sensitiveWords = append(sensitiveWords, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("Error reading wordlist file: %v\n", err)
+	}
+}
+
+func processURL(targetUrl string, wordlistProvided bool) {
 	fmt.Printf("\nStarting %s...\n", "hackJS")
 
 	resp, err := httpGet(targetUrl)
@@ -54,6 +84,7 @@ func processURL(targetUrl string) {
 
 	var results []string
 	var subdomains []string
+	var sensitiveData []string
 
 	for _, jsFile := range jsFiles {
 		jsContent, err := fetchJSContent(jsFile)
@@ -64,20 +95,25 @@ func processURL(targetUrl string) {
 
 		results = append(results, filterLinks(extractLinks(jsContent, targetUrl), targetUrl)...)
 		subdomains = append(subdomains, filterSubdomains(extractSubdomains(jsContent, targetUrl), targetUrl)...)
+		if wordlistProvided {
+			sensitiveData = append(sensitiveData, findSensitiveData(jsContent, jsFile)...)
+		}
 	}
 
 	results = removeDuplicates(results)
 	subdomains = removeDuplicates(subdomains)
 	jsFiles = removeDuplicates(jsFiles)
+	sensitiveData = removeDuplicates(sensitiveData)
 
 	printResults("Links", results, "\033[32m")
 	printResults("Subdomains", subdomains, "\033[36m")
 	printResults("JS Files", jsFiles, "\033[33m")
+	printResults("Sensitive Data", sensitiveData, "\033[31m")
 
-	saveResults(targetUrl, results, subdomains, jsFiles)
+	saveResults(targetUrl, results, subdomains, jsFiles, sensitiveData)
 }
 
-func processFile(fileName string) {
+func processFile(fileName string, wordlistProvided bool) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		fmt.Printf("Error opening file: %v\n", err)
@@ -87,7 +123,8 @@ func processFile(fileName string) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		processURL(scanner.Text())
+		processURL(scanner.Text(), wordlistProvided)
+		fmt.Println("_____________________________________________________________________________________________")
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -187,6 +224,16 @@ func extractSubdomains(jsContent string, baseURL string) []string {
 	return matches
 }
 
+func findSensitiveData(jsContent, jsFile string) []string {
+	var matches []string
+	for _, word := range sensitiveWords {
+		if strings.Contains(jsContent, word) {
+			matches = append(matches, fmt.Sprintf("🔹 %s ➔ %s", word, jsFile))
+		}
+	}
+	return matches
+}
+
 func filterLinks(links []string, baseURL string) []string {
 	baseDomain := extractDomain(baseURL)
 	var filteredLinks []string
@@ -213,7 +260,7 @@ func filterSubdomains(subdomains []string, baseURL string) []string {
 	return filteredSubdomains
 }
 
-func saveResults(targetUrl string, results, subdomains, jsFiles []string) {
+func saveResults(targetUrl string, results, subdomains, jsFiles, sensitiveData []string) {
 	domain := extractDomain(targetUrl)
 	if domain == "" {
 		fmt.Println("Invalid URL provided.")
@@ -234,20 +281,19 @@ func saveResults(targetUrl string, results, subdomains, jsFiles []string) {
 	}
 	defer file.Close()
 
-	writeSection(file, "Links", results, "\033[32m")
-	writeSection(file, "Subdomains", subdomains, "\033[36m")
-	writeSection(file, "JS Files", jsFiles, "\033[33m")
+	writeSection(file, "Links", results)
+	writeSection(file, "Subdomains", subdomains)
+	writeSection(file, "JS Files", jsFiles)
+	writeSection(file, "Sensitive Data", sensitiveData)
 
 	fmt.Printf("Results saved to %s\n", fileName)
-	fmt.Printf("_____________________________________________________________________________________________")
 }
 
-func writeSection(file *os.File, title string, results []string, color string) {
-	file.WriteString(fmt.Sprintf("\n%s%s:\n", color, title))
+func writeSection(file *os.File, title string, results []string) {
+	file.WriteString(fmt.Sprintf("\n%s:\n", title))
 	for _, result := range results {
-		file.WriteString(fmt.Sprintf("%s%s\n", color, result))
+		file.WriteString(fmt.Sprintf("%s\n", result))
 	}
-	file.WriteString("\033[0m")
 }
 
 func printResults(title string, results []string, color string) {
