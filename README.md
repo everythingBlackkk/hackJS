@@ -6,7 +6,7 @@ ____
 - JavaScript Extraction: Fetches JavaScript files linked in HTML pages.
 - Subdomain Extraction: Identifies subdomains referenced in JavaScript files.
 - Results Organization: Outputs and saves extracted data into categorized result files.
-- Get sensitive data in javascript files like Token,Api,..... 
+- Get sensitive data in javascript files like Token,Api,..... " But You Must put your word list '-w' "
 
 ## Installation
 
