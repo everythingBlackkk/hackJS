@@ -49,9 +49,9 @@ ____
 ## Output
 The results are categorized and saved into a result directory. Each category includes:
 
-#Sample Output
+## Sample Output
 
-```
+```go
 ===Links===
 https://example.com/page1
 https://example.com/page2
@@ -74,7 +74,7 @@ Total Sensitive Data found: 2
 
 ```
 
-##Contact
+## Contact
 For any questions or feedback, please contact:
 Name: Yassin Abd-elrazik
 GitHub: everythingBlackkk
