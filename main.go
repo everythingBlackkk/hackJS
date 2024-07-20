@@ -27,6 +27,10 @@ func main() {
 	if len(os.Args) == 5 && os.Args[3] == "-w" {
 		loadWordlist(os.Args[4])
 		wordlistProvided = true
+	} else {
+		if !loadDefaultWordlist() {
+			fmt.Println("\033[31mWarning: The file WordList.txt is missing. Please download it from GitHub.\033[0m")
+		}
 	}
 
 	if os.Args[1] == "-u" {
@@ -35,10 +39,6 @@ func main() {
 		processFile(os.Args[2], wordlistProvided)
 	} else {
 		fmt.Println("Invalid option. Use -u for a URL or -l for a file.")
-	}
-
-	if !wordlistProvided {
-		fmt.Println("Note: You did not provide a wordlist with -w to benefit from the sensitive data search feature.")
 	}
 }
 
@@ -58,6 +58,25 @@ func loadWordlist(fileName string) {
 	if err := scanner.Err(); err != nil {
 		fmt.Printf("Error reading wordlist file: %v\n", err)
 	}
+}
+
+func loadDefaultWordlist() bool {
+	fileName := "WordList.txt"
+	file, err := os.Open(fileName)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		sensitiveWords = append(sensitiveWords, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Printf("Error reading default wordlist file: %v\n", err)
+	}
+	return true
 }
 
 func processURL(targetUrl string, wordlistProvided bool) {
@@ -108,7 +127,11 @@ func processURL(targetUrl string, wordlistProvided bool) {
 	printResults("Links", results, "\033[32m")
 	printResults("Subdomains", subdomains, "\033[36m")
 	printResults("JS Files", jsFiles, "\033[33m")
-	printResults("Sensitive Data", sensitiveData, "\033[31m")
+	if len(sensitiveData) > 0 {
+		printResults("Sensitive Data", sensitiveData, "\033[31m")
+	} else {
+		fmt.Println("\n\033[31mNo sensitive data found.\033[0m")
+	}
 
 	saveResults(targetUrl, results, subdomains, jsFiles, sensitiveData)
 }
@@ -148,8 +171,8 @@ $$/   $$/  $$$$$$$/  $$$$$$$/ $$/   $$/  $$$$$$/   $$$$$$/
                                                             
                                                             
 `)
-	fmt.Println("# hackJS , Coded By Yassin Abd-elrazik")
-	fmt.Println("Made By <3 github : everythingBlackkk")
+	fmt.Println("          # hackJS , Coded By Yassin Abd-elrazik")
+	fmt.Println("          Made By <3 github : everythingBlackkk")
 	fmt.Println("\033[0m")
 }
 
@@ -281,12 +304,12 @@ func saveResults(targetUrl string, results, subdomains, jsFiles, sensitiveData [
 	}
 	defer file.Close()
 
-	writeSection(file, "Links", results)
-	writeSection(file, "Subdomains", subdomains)
-	writeSection(file, "JS Files", jsFiles)
-	writeSection(file, "Sensitive Data", sensitiveData)
+	writeSection(file, "===Links===", results)
+	writeSection(file, "===Subdomains===", subdomains)
+	writeSection(file, "===JS Files===", jsFiles)
+	writeSection(file, "===Sensitive Data===", sensitiveData)
 
-	fmt.Printf("Results saved to %s\n", fileName)
+	fmt.Printf("\n\033[32mResults saved to %s\n\033[0m", fileName)
 }
 
 func writeSection(file *os.File, title string, results []string) {
