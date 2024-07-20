@@ -51,7 +51,7 @@ The results are categorized and saved into a result directory. Each category inc
 
 #Sample Output
 
-```golang
+```
 ===Links===
 https://example.com/page1
 https://example.com/page2
@@ -76,7 +76,6 @@ Total Sensitive Data found: 2
 
 ##Contact
 For any questions or feedback, please contact:
-
 Name: Yassin Abd-elrazik
 GitHub: everythingBlackkk
 
