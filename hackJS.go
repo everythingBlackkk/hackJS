@@ -343,14 +343,12 @@ func saveResults(targetUrl string, results, subdomains, jsFiles, sensitiveData [
         return
     }
 
-    // الحصول على مسار دليل المنزل للمستخدم الحالي
     homeDir, err := os.UserHomeDir()
     if err != nil {
         fmt.Printf("Error getting user home directory: %v\n", err)
         return
     }
 
-    // تحديد مسار مجلد النتائج في دليل المنزل
     baseDir := filepath.Join(homeDir, "hackJS_results")
 
     resultsDir := filepath.Join(baseDir, domain)
