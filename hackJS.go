@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	//"sort"
 	"strings"
 )
 
@@ -62,23 +61,29 @@ func loadWordlist(fileName string) {
 }
 
 func loadDefaultWordlist() bool {
-	fileName := "WordList.txt"
-	file, err := os.Open(fileName)
-	if err != nil {
-		return false
-	}
-	defer file.Close()
+    homeDir, err := os.UserHomeDir()
+    if err != nil {
+        fmt.Printf("Error getting home directory: %v\n", err)
+        return false
+    }
+    fileName := filepath.Join(homeDir, "bin", "WordList.txt")
+    file, err := os.Open(fileName)
+    if err != nil {
+        return false
+    }
+    defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		sensitiveWords = append(sensitiveWords, scanner.Text())
-	}
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+        sensitiveWords = append(sensitiveWords, scanner.Text())
+    }
 
-	if err := scanner.Err(); err != nil {
-		fmt.Printf("Error reading default wordlist file: %v\n", err)
-	}
-	return true
+    if err := scanner.Err(); err != nil {
+        fmt.Printf("Error reading default wordlist file: %v\n", err)
+    }
+    return true
 }
+
 
 func processURL(targetUrl string, wordlistProvided bool) {
 	fmt.Printf("\nStarting %s...\n", "hackJS")
@@ -287,87 +292,97 @@ func filterSubdomains(subdomains []string, baseURL string) []string {
 func removeDuplicates(elements []string) []string {
 	encountered := map[string]bool{}
 	var result []string
-	for _, element := range elements {
-		if !encountered[element] {
-			encountered[element] = true
-			result = append(result, element)
+
+	for _, v := range elements {
+		if encountered[v] == false {
+			encountered[v] = true
+			result = append(result, v)
 		}
 	}
+
 	return result
 }
 
-func extractDomain(inputURL string) string {
-	u, err := url.Parse(inputURL)
+func cleanURL(dirtyURL string) string {
+	cleanURL, err := url.Parse(dirtyURL)
 	if err != nil {
-		fmt.Println("Error parsing URL:", err)
-		return ""
+		return dirtyURL
 	}
-	parts := strings.Split(u.Hostname(), ".")
-	if len(parts) < 2 {
-		return ""
-	}
-	return parts[len(parts)-2] + "." + parts[len(parts)-1]
+	cleanURL.Fragment = ""
+	return cleanURL.String()
 }
 
-func cleanURL(rawURL string) string {
-	u, err := url.Parse(rawURL)
+func extractDomain(rawURL string) string {
+	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
-		return rawURL
+		return ""
 	}
-	u.RawQuery = ""
-	u.Fragment = ""
-	return u.String()
+
+	host := parsedURL.Hostname()
+	parts := strings.Split(host, ".")
+	if len(parts) >= 2 {
+		return parts[len(parts)-2] + "." + parts[len(parts)-1]
+	}
+
+	return host
 }
 
-func printResults(label string, results []string, color string) {
+func printResults(label string, results []string, colorCode string) {
 	if len(results) > 0 {
-		fmt.Printf("\n%s===%s===\n\033[0m", color, label)
+		fmt.Printf("\n%s%s:\033[0m\n", colorCode, label)
 		for _, result := range results {
 			fmt.Println(result)
 		}
 	}
 }
 
-func writeSection(file *os.File, title string, content []string) {
-	file.WriteString(title + "\n")
-	for _, line := range content {
-		file.WriteString(line + "\n")
-	}
-	file.WriteString("\n")
+func saveResults(targetUrl string, results, subdomains, jsFiles, sensitiveData []string) {
+    domain := extractDomain(targetUrl)
+    if domain == "" {
+        fmt.Println("Invalid URL provided.")
+        return
+    }
+
+    // الحصول على مسار دليل المنزل للمستخدم الحالي
+    homeDir, err := os.UserHomeDir()
+    if err != nil {
+        fmt.Printf("Error getting user home directory: %v\n", err)
+        return
+    }
+
+    // تحديد مسار مجلد النتائج في دليل المنزل
+    baseDir := filepath.Join(homeDir, "hackJS_results")
+
+    resultsDir := filepath.Join(baseDir, domain)
+    if err := os.MkdirAll(resultsDir, 0755); err != nil {
+        fmt.Printf("Error creating results directory: %v\n", err)
+        return
+    }
+
+    saveToFile(filepath.Join(resultsDir, "links.txt"), results)
+    saveToFile(filepath.Join(resultsDir, "subdomains.txt"), subdomains)
+    saveToFile(filepath.Join(resultsDir, "jsfiles.txt"), jsFiles)
+    if len(sensitiveData) > 0 {
+        saveToFile(filepath.Join(resultsDir, "sensitive.txt"), sensitiveData)
+    }
+
+    fmt.Printf("Results saved to: %s\n", resultsDir)
 }
 
-func saveResults(targetUrl string, results, subdomains, jsFiles, sensitiveData []string) {
-	domain := extractDomain(targetUrl)
-	if (domain == "") {
-		fmt.Println("Invalid URL provided.")
-		return
-	}
 
-	executablePath, err := os.Executable()
-	if err != nil {
-		fmt.Printf("Error getting executable path: %v\n", err)
-		return
-	}
-	executableDir := filepath.Dir(executablePath)
-
-	dir := filepath.Join(executableDir, "result")
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		fmt.Printf("Error creating result directory: %v\n", err)
-		return
-	}
-
-	fileName := fmt.Sprintf("%s/%s.txt", dir, domain)
+func saveToFile(fileName string, data []string) {
 	file, err := os.Create(fileName)
 	if err != nil {
-		fmt.Printf("Error creating result file: %v\n", err)
+		fmt.Printf("Error creating file %s: %v\n", fileName, err)
 		return
 	}
 	defer file.Close()
 
-	writeSection(file, "===Links===", results)
-	writeSection(file, "===Subdomains===", subdomains)
-	writeSection(file, "===JS Files===", jsFiles)
-	writeSection(file, "===Sensitive Data===", sensitiveData)
-
-	fmt.Printf("\n\033[32mResults saved to %s\n\033[0m", fileName)
+	for _, line := range data {
+		_, err := file.WriteString(line + "\n")
+		if err != nil {
+			fmt.Printf("Error writing to file %s: %v\n", fileName, err)
+			return
+		}
+	}
 }
