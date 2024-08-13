@@ -23,22 +23,26 @@ ____
     ```bash
     cd hackJS
     ```
-3. run tool:
+3. build hackJS :
    ```bash
-    go run main.go
+    go build hackJS.go
+   ```
+4. Run Tool :
+   ```bash
+    ./hackJS
    ```
    
 ## Usage
 
 
    ```Basic Usage
-    go run main.go -u <URL>
+    ./hackJS -u <URL>
    ```
    ```Scan Multiple URLs from a File:
-    go run main.go -l <file>
+    ./hackJS -l <file>
    ```
    ```bash
-    go run main.go -l url.txt -w sensitive-world-list.txt
+    ./hackJS -l url.txt -w sensitive-world-list.txt
    ```
 
 ## Options
