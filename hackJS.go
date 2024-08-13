@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
-	"sort"
+	//"sort"
 	"strings"
 )
 
@@ -275,7 +276,7 @@ func filterSubdomains(subdomains []string, baseURL string) []string {
 	var filteredSubdomains []string
 	encountered := map[string]bool{}
 	for _, subdomain := range subdomains {
-		if !encountered[subdomain] && strings.Contains(subdomain, baseDomain) {
+		if !encountered[subdomain] && strings.HasSuffix(subdomain, baseDomain) {
 			encountered[subdomain] = true
 			filteredSubdomains = append(filteredSubdomains, subdomain)
 		}
@@ -283,14 +284,73 @@ func filterSubdomains(subdomains []string, baseURL string) []string {
 	return filteredSubdomains
 }
 
+func removeDuplicates(elements []string) []string {
+	encountered := map[string]bool{}
+	var result []string
+	for _, element := range elements {
+		if !encountered[element] {
+			encountered[element] = true
+			result = append(result, element)
+		}
+	}
+	return result
+}
+
+func extractDomain(inputURL string) string {
+	u, err := url.Parse(inputURL)
+	if err != nil {
+		fmt.Println("Error parsing URL:", err)
+		return ""
+	}
+	parts := strings.Split(u.Hostname(), ".")
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[len(parts)-2] + "." + parts[len(parts)-1]
+}
+
+func cleanURL(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+	u.RawQuery = ""
+	u.Fragment = ""
+	return u.String()
+}
+
+func printResults(label string, results []string, color string) {
+	if len(results) > 0 {
+		fmt.Printf("\n%s===%s===\n\033[0m", color, label)
+		for _, result := range results {
+			fmt.Println(result)
+		}
+	}
+}
+
+func writeSection(file *os.File, title string, content []string) {
+	file.WriteString(title + "\n")
+	for _, line := range content {
+		file.WriteString(line + "\n")
+	}
+	file.WriteString("\n")
+}
+
 func saveResults(targetUrl string, results, subdomains, jsFiles, sensitiveData []string) {
 	domain := extractDomain(targetUrl)
-	if domain == "" {
+	if (domain == "") {
 		fmt.Println("Invalid URL provided.")
 		return
 	}
 
-	dir := "result"
+	executablePath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Error getting executable path: %v\n", err)
+		return
+	}
+	executableDir := filepath.Dir(executablePath)
+
+	dir := filepath.Join(executableDir, "result")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		fmt.Printf("Error creating result directory: %v\n", err)
 		return
@@ -310,50 +370,4 @@ func saveResults(targetUrl string, results, subdomains, jsFiles, sensitiveData [
 	writeSection(file, "===Sensitive Data===", sensitiveData)
 
 	fmt.Printf("\n\033[32mResults saved to %s\n\033[0m", fileName)
-}
-
-func writeSection(file *os.File, title string, results []string) {
-	file.WriteString(fmt.Sprintf("\n%s:\n", title))
-	for _, result := range results {
-		file.WriteString(fmt.Sprintf("%s\n", result))
-	}
-}
-
-func printResults(title string, results []string, color string) {
-	fmt.Printf("\n%s%s:\n", color, title)
-	for _, result := range results {
-		fmt.Printf("%s%s\n", color, result)
-	}
-	fmt.Printf("\033[0mTotal %s found: %d\n", title, len(results))
-}
-
-func extractDomain(targetUrl string) string {
-	parsedUrl, err := url.Parse(targetUrl)
-	if err != nil {
-		return ""
-	}
-	return parsedUrl.Host
-}
-
-func cleanURL(rawURL string) string {
-	trimChars := []string{`"`, `'`, `>`, `<`, `)`}
-	for _, char := range trimChars {
-		if idx := strings.Index(rawURL, char); idx != -1 {
-			rawURL = rawURL[:idx]
-		}
-	}
-	return rawURL
-}
-
-func removeDuplicates(elements []string) []string {
-	encountered := map[string]bool{}
-	result := []string{}
-	for _, v := range elements {
-		if !encountered[v] {
-			encountered[v] = true
-			result = append(result, v)
-		}
-	}
-	sort.Strings(result)
-	return result
 }
