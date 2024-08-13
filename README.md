@@ -23,26 +23,27 @@ ____
     ```bash
     cd hackJS
     ```
-3. build hackJS :
+3. Tool setup :
    ```bash
-    go build hackJS.go
+    chmod +x install_hackJS.sh
+   ./install_hackJS.sh
    ```
 4. Run Tool :
    ```bash
-    ./hackJS
+    hackJS
    ```
    
 ## Usage
 
 
    ```Basic Usage
-    ./hackJS -u <URL>
+    hackJS -u <URL>
    ```
    ```Scan Multiple URLs from a File:
-    ./hackJS -l <file>
+    hackJS -l <file>
    ```
    ```bash
-    ./hackJS -l url.txt -w sensitive-world-list.txt
+    hackJS -l url.txt -w sensitive-world-list.txt
    ```
 
 ## Options
