@@ -44,7 +44,7 @@ pip install requests beautifulsoup4 colorama
 ### Basic Usage
 
 ```bash
-python3 webrecon.py -u example.com
+python3 hackjs.py -u example.com
 ```
 
 ### Command Line Arguments
@@ -61,22 +61,22 @@ python3 webrecon.py -u example.com
 
 Scan with default settings:
 ```bash
-python3 webrecon.py -u example.com
+python3 hackjs.py -u example.com
 ```
 
 Scan with custom depth and threads:
 ```bash
-python3 webrecon.py -u example.com -d 3 -t 10
+python3 hackjs.py -u example.com -d 3 -t 10
 ```
 
 Scan with keyword search:
 ```bash
-python3 webrecon.py -u example.com -w keywords.txt
+python3 hackjs.py -u example.com -w keywords.txt
 ```
 
 Save results to a file:
 ```bash
-python3 webrecon.py -u example.com -o results.txt
+python3 hackjs.py -u example.com -o results.txt
 ```
 
 ### Creating a Wordlist
