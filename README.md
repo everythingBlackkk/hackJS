@@ -1,88 +1,124 @@
-# hackJS
-hackJS is a tool designed to analyze JavaScript files from a specified URL or a list of URLs to extract useful information such as links, subdomains, and sensitive data. It can also work with wordlists to search for specific keywords within JavaScript files. This tool helps in discovering hidden resources and potential security issues on websites.
+# HackJS
 
-____
+## Introduction
+
+HackJS is a comprehensive web reconnaissance tool designed for security researchers and bug hunters. It efficiently crawls websites to extract JavaScript files, discover subdomains, and search for specific keywords within JavaScript code that might indicate vulnerabilities or sensitive information.
+
 ## Features
 
-- Extract Links: Finds and filters all links in JavaScript files.
-- Extract Subdomains: Identifies subdomains mentioned in JavaScript files.
-- Find Sensitive Data: Searches for sensitive words in JavaScript files using a provided or default wordlist.
-- Output Results: Saves results to a file and displays them on the console.
-- Handle Multiple URLs: Can process a single URL or multiple URLs from a file.
+- **JavaScript File Discovery**: Automatically detects and extracts JavaScript files from target websites
+- **Subdomain Enumeration**: Identifies subdomains related to the target domain
+- **Keyword Searching**: Searches for specific keywords or patterns within JavaScript files
+- **Configurable Crawl Depth**: Set how deep the crawler should traverse the website
+- **Multi-threading Support**: Parallel processing for faster reconnaissance
+- **Detailed Output**: Comprehensive reporting of findings with context for keyword matches
+- **File Export**: Save results to a file for further analysis
 
 ## Installation
 
-1. Clone the repository to your local machine:
+### Prerequisites
 
-    ```bash
-    git clone https://github.com/everythingBlackkk/hackJS.git
-    ```
+- Python 3.6+
+- pip (Python package installer)
 
-2. Navigate to the hackJS directory:
+### Setup
 
-    ```bash
-    cd hackJS
-    ```
-3. Tool setup :
-   ```bash
-    chmod +x install_hackJS.sh
-   ./install_hackJS.sh
-   ```
-4. Run Tool :
-   ```bash
-    hackJS
-   ```
-   
-## Usage
-
-
-   ```Basic Usage
-    hackJS -u <URL>
-   ```
-   ```Scan Multiple URLs from a File:
-    hackJS -l <file>
-   ```
-   ```bash
-    hackJS -l url.txt -w sensitive-world-list.txt
-   ```
-
-## Options
-- -u <URL>: Specifies the URL to scan.
-- -l <file>: Specifies a file containing a list of URLs to scan.
-- -w <wordlist>: Specifies a custom wordlist file to search for sensitive data.
-
-## Output
-The results are categorized and saved into a result directory. Each category includes:
-
-## Sample Output
-
-```go
-===Links===
-https://example.com/page1
-https://example.com/page2
-Total Links found: 2
-
-===Subdomains===
-sub.example.com
-api.example.com
-Total Subdomains found: 2
-
-===JS Files===
-https://example.com/script1.js
-https://example.com/script2.js
-Total JS Files found: 2
-
-===Sensitive Data===
-🔹 api_key ➔ https://example.com/script1.js
-🔹 token ➔ https://example.com/script2.js
-Total Sensitive Data found: 2
-
+1. Clone the repository:
+```bash
+git clone https://github.com/everythingBlackkk/hackJS.git
+cd hackJS
 ```
 
-## Contact
-For any questions or feedback, please contact:
-Name: Yassin Abd-elrazik
-GitHub: everythingBlackkk
+2. Install required dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-## Contributing
-Contributions are welcome! Fork the repository, make your changes, and submit a pull request.
+Alternatively, you can install dependencies manually:
+```bash
+pip install requests beautifulsoup4 colorama
+```
+
+## Usage
+
+### Basic Usage
+
+```bash
+python3 webrecon.py -u example.com
+```
+
+### Command Line Arguments
+
+| Option | Description |
+|--------|-------------|
+| `-u, --url` | Target URL to scan (required) |
+| `-w, --wordlist` | Path to wordlist file for keyword search |
+| `-t, --threads` | Number of threads (default: 5) |
+| `-d, --depth` | Crawling depth (default: 2) |
+| `-o, --output` | Output file to save results |
+
+### Examples
+
+Scan with default settings:
+```bash
+python3 webrecon.py -u example.com
+```
+
+Scan with custom depth and threads:
+```bash
+python3 webrecon.py -u example.com -d 3 -t 10
+```
+
+Scan with keyword search:
+```bash
+python3 webrecon.py -u example.com -w keywords.txt
+```
+
+Save results to a file:
+```bash
+python3 webrecon.py -u example.com -o results.txt
+```
+
+### Creating a Wordlist
+
+Create a text file with keywords or patterns to search for in JavaScript files, one per line:
+
+```
+api_key
+password
+token
+secret
+credentials
+```
+
+## Output
+
+WebRecon provides comprehensive output displaying:
+- Discovered JavaScript files
+- Identified subdomains
+- Keyword matches with surrounding context
+- Summary statistics
+
+When saving to a file using the `-o` option, results are formatted in clear sections for easy analysis.
+
+
+## Use Cases
+
+- Bug bounty hunting
+- Penetration testing
+- Security assessments
+- Asset discovery
+- Sensitive information detection
+
+
+## Author
+
+**Yassin Mohamed** - [@everythingBlackkk](https://github.com/everythingBlackkk)
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Disclaimer
+
+WebRecon is intended for use by security professionals with proper authorization to test target systems. Unauthorized scanning of websites may violate laws and regulations. Always obtain proper permission before scanning websites you don't own.
