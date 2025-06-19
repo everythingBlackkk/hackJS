@@ -1,6 +1,5 @@
 requests
 beautifulsoup4
-colorama
 urllib3
 concurrent.futures
 re
